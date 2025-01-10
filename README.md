@@ -1,4 +1,4 @@
-Title:
+**Title:**
 Log Archival System
 Overview:
 This document describes the technologies and architecture used to implement the log archival system, which automates the movement of logs from /var/log/audit/ to an S3 bucket.
