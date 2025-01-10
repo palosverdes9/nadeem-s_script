@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Variables
+LOG_DIR="/var/log/audit"
+S3_BUCKET="s3://your-bucket-name"
+CURRENT_DATE=$(date +%Y-%m-01)
+MONTH_BEFORE_LAST=$(date -d "$CURRENT_DATE -2 month" +%Y-%m)
+MONTH_BEFORE_LAST_START=$(date -d "$CURRENT_DATE -2 month" +%Y-%m-01)
+MONTH_BEFORE_LAST_END=$(date -d "$CURRENT_DATE -1 month" +%Y-%m-01)
+
+# Create a temporary directory for uploading
+TEMP_DIR=$(mktemp -d)
+
+# Find and copy logs of the month before last
+find "$LOG_DIR" -type f -name "*.log.*" -newermt "$MONTH_BEFORE_LAST_START" ! -newermt "$MONTH_BEFORE_LAST_END" -exec cp {} "$TEMP_DIR" \;
+
+# Sync logs to S3
+aws s3 sync "$TEMP_DIR" "$S3_BUCKET/$MONTH_BEFORE_LAST/" --storage-class STANDARD_IA
+
+# Clean up
+rm -rf "$TEMP_DIR"
+
+# Optionally delete local logs
+# Uncomment the line below to remove logs locally after uploading
+# find "$LOG_DIR" -type f -name "*.log.*" -newermt "$MONTH_BEFORE_LAST_START" ! -newermt "$MONTH_BEFORE_LAST_END" -delete
